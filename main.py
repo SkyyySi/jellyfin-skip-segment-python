@@ -1,9 +1,37 @@
-# #!/usr/bin/env python3
+#!/usr/bin/env python3
 import os
 import sys
 import subprocess
+import getopt
+
+def run_command(cmd):
+	return subprocess.run(cmd, capture_output=True, text=True).stdout.strip('\n')
+
+def usage():
+	"""
+	Prints usage/help text.
+	"""
+	print('Usage: ' + sys.argv[0][0] + '[OPTION]... FILE...')
+
+def get_clip_length(file: str):
+	"""
+	Returns the length of an audio / video file in seconds.
+	"""
+	# Check if the file is actually a file (and not a directory)
+	# and whether the user has write access.
+	if not (os.path.isfile(file) and os.access(file, os.R_OK)):
+		raise NameError(f'The file {file} is either invalid or cannot be read!')
+
+	leng = run_command(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', '-sexagesimal', file])
+	return leng
 
 def parse_length(time: str):
+	"""
+	For manually specified time values.
+	Parse a "hh:mm:ss" string into seconds. Decimals at the end will be respected.
+	For example, "02:43:47.784" will return 9827.784
+	"""
+
 	# Unpack the time string.
 	length_split: list = time.split(':')
 
@@ -55,8 +83,19 @@ def parse_length(time: str):
 	return true_length
 
 def main(*argv: str):
-	args: str = argv[0]
-	return parse_length(args)
+	args: str = argv[0][1:]
+	opts, args = getopt.gnu_getopt(args, ':ht:f:')
+
+	for o, a in opts:
+		if o in '-h':
+			usage()
+		elif o == '-t':
+			print(f'Input time:      {a}')
+			print(f'Time in seconds: {str(parse_length(a))}')
+		elif o == '-f':
+			leng = get_clip_length(a)
+			print(f'Length of file (human readable): {leng}')
+			print(f'Length of file (in seconds):     {str(parse_length(leng))}')
 
 if __name__ == '__main__':
-	print(main(sys.argv[1]))
+	main(sys.argv)
