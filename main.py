@@ -11,7 +11,7 @@ def usage():
 	"""
 	Prints usage/help text.
 	"""
-	print('Usage: ' + sys.argv[0][0] + '[OPTION]... FILE...')
+	print(f'Usage: {sys.argv[0]} [OPTION]... FILE...')
 
 def get_clip_length(file: str):
 	"""
